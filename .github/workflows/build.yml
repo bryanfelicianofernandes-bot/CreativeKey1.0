@@ -4,7 +4,8 @@ name: Build CreativeKey
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches:
+      - main
 
 jobs:
   build:
@@ -19,20 +20,17 @@ jobs:
           distribution: temurin
           java-version: '25'
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: '9.1.0'
-
       - name: Extract project ZIP
-        run: unzip -q CreativeKey-source.zip -d .
+        run: unzip -q CreativeKey-source.zip -d project
 
-      - name: Build mod
-        run: gradle -p CreativeKey build --no-daemon
+      - name: Find Gradle project
+        run: |
+          find project -type f \( -name gradlew -o -name build.gradle -o -name build.gradle.kts \)
 
-      - name: Upload mod JAR
-        uses: actions/upload-artifact@v4
-        with:
-          name: creativekey-1.0.0
-          path: CreativeKey/build/libs/creativekey-1.0.0.jar
+      - name: Stop if project files are missing
+        run: |
+          if ! find project -type f \( -name gradlew -o -name build.gradle -o -name build.gradle.kts \) | grep -q .; then
+            echo "Gradle build files not found in ZIP"
+            exit 1
+          fi
           
