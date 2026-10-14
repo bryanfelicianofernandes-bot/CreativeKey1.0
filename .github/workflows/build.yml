@@ -1,22 +1,38 @@
+
 name: Build CreativeKey
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Check project files
-        run: |
-          echo "Checking repository contents..."
-          ls -la
-          if [ ! -f CreativeKey-source.zip ]; then
-            echo "CreativeKey-source.zip not found"
-            exit 1
-          fi
-          echo "ZIP found. The project must be extracted and its build files committed before compiling."
+      - name: Install Java 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.1.0'
+
+      - name: Extract project ZIP
+        run: unzip -q CreativeKey-source.zip -d .
+
+      - name: Build mod
+        run: gradle -p CreativeKey build --no-daemon
+
+      - name: Upload mod JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: creativekey-1.0.0
+          path: CreativeKey/build/libs/creativekey-1.0.0.jar
           
